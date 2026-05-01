@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FNAF 1 - About Us</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        /* --- Base Setup --- */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            user-select: none;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: #000;
+            border: 2px solid #111;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+            overflow: hidden;
+        }
+
+        /* --- THE NEW UNIFIED BLIP FLASH OVERLAY --- */
+        #blip-flash-overlay {
+            display: block; /* Shows instantly on load */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('Screenpart/PC\ _\ Computer\ -\ Five\ Nights\ at\ Freddy\'s\ -\ Miscellaneous\ -\ Blip\ Flash.png');
+            background-size: 100% 1100%;
+            background-repeat: no-repeat;
+            z-index: 100; /* On top of absolutely everything */
+            pointer-events: none; /* Let clicks pass through */
+        }
+
+        /* --- Background Setup --- */
+        #menu-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('Background/xtv8q6ridky11.gif');
+            background-color: #111;
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* --- TV Static Overlay Effect --- */
+        .static-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: repeating-radial-gradient(circle at 17% 32%, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.05) 0.00085px);
+            animation: staticAnim 0.1s infinite;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        @keyframes staticAnim {
+            0% { background-position: 0 0; }
+            100% { background-position: 10px 10px; }
+        }
+
+        /* --- Scanlines Effect --- */
+        .scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            z-index: 11;
+            pointer-events: none;
+        }
+
+        /* --- Content Layout --- */
+        .content-container {
+            position: relative;
+            z-index: 30;
+            padding: clamp(28px, 8%, 90px) 5%;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85); /* Darkens the background */
+            overflow-y: auto; /* Allows scrolling if text gets too long */
+            display: flex;
+            flex-direction: column; /* Stacks elements vertically */
+        }
+
+        /* Custom Scrollbar */
+        .content-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .content-container::-webkit-scrollbar-track {
+            background: #111;
+        }
+
+        .content-container::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 4px;
+        }
+
+        .content-container::-webkit-scrollbar-thumb:hover {
+            background: #777;
+        }
+
+        .screen-title {
+            font-size: clamp(28px, 3vw, 42px);
+            margin: 0 0 20px;
+            text-shadow: 2px 2px 5px #000;
+            font-weight: normal;
+        }
+
+        .screen-content {
+            font-size: clamp(15px, 1.5vw, 21px);
+            line-height: 1.8;
+            max-width: 800px;
+            color: #ddd;
+        }
+
+        .screen-content p {
+            margin-top: 0;
+        }
+
+        .developer-label {
+            color: #fff;
+            font-size: clamp(20px, 2vw, 28px);
+        }
+
+        .mechanics-heading {
+            color: #fff;
+            font-size: clamp(18px, 1.8vw, 25px);
+            margin-bottom: 5px;
+        }
+
+        .mechanics-list {
+            margin-top: 5px;
+            margin-bottom: 20px;
+            color: #ccc;
+        }
+
+        .about-layout {
+            display: flex;
+            gap: clamp(24px, 4vw, 40px);
+            align-items: flex-start;
+            margin-top: 20px;
+        }
+
+        .dev-photo {
+            width: 250px;
+            height: 250px;
+            border: 2px dashed #666;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #888;
+            font-size: clamp(12px, 1.2vw, 17px);
+            line-height: 1.4;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
+            background-size: cover;
+            background-position: center;
+            flex-shrink: 0;
+        }
+
+        .disclaimer-text {
+            color: #ff5555;
+            font-size: clamp(13px, 1.2vw, 17px);
+            border-top: 1px solid #444;
+            padding-top: 15px;
+            margin-top: 20px;
+        }
+
+        /* --- Bottom Button --- */
+        .back-btn {
+            margin-top: auto;
+            padding-top: 50px;
+            padding-bottom: 20px;
+            border: 0;
+            background: transparent;
+            color: white;
+            font-family: inherit;
+            font-size: clamp(20px, 2vw, 28px);
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s, text-shadow 0.2s;
+            display: inline-block;
+            text-align: left;
+            width: fit-content;
+        }
+
+        .back-btn:hover,
+        .back-btn:focus-visible {
+            opacity: 1;
+            text-shadow: 0 0 10px white;
+            outline: none;
+        }
+
+        @media (max-width: 700px) {
+            body, html {
+                overflow: auto;
+                align-items: flex-start;
+            }
+
+            #game-container {
+                min-height: 100vh;
+                aspect-ratio: auto;
+                border: 0;
+            }
+
+            .content-container {
+                min-height: 100vh;
+            }
+
+            .about-layout {
+                flex-direction: column;
+            }
+
+            .dev-photo {
+                width: min(70vw, 250px);
+                height: auto;
+                aspect-ratio: 1 / 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- The Flash Element Overlay (Handles both Entrance and Exits) -->
+        <div id="blip-flash-overlay"></div>
+
+        <div id="menu-screen">
+            <!-- Visual Effects -->
+            <div class="static-overlay"></div>
+            <div class="scanlines"></div>
+
+            <!-- Page Content -->
+            <main class="content-container">
+                <h1 class="screen-title">About This Project</h1>
+
+                <div class="about-layout">
+                    <!-- Developer Photo Placeholder -->
+                    <div class="dev-photo" id="dev-photo-container">
+                        [Add Your Photo Here]<br><br>
+                        (e.g., hein-photo.jpg)
+                    </div>
+
+                    <!-- Content Text -->
+                    <div class="screen-content">
+                        <p><span class="developer-label">Developer:</span> <strong>Hein Htoo Naing</strong></p>
+                        <p>I created this web-based recreation of Five Nights at Freddy's purely for fun and to bring back the enjoyable, terrifying nostalgia of the original 2014 classic. The original game proved that you don't need complex 3D graphics to create a truly tense atmosphere, and I wanted to capture that exact feeling right inside a web browser.</p>
+                        <p>This project was built from the ground up to challenge my coding skills, using nothing but raw <strong>HTML5, CSS3, and Vanilla JavaScript</strong> - no external game engines, libraries, or frameworks were used. Building this taught me a lot about advanced DOM manipulation, managing complex game states, handling timing events, and structuring a multi-page web project from scratch.</p>
+
+                        <p class="mechanics-heading"><strong>Key Game Mechanics:</strong></p>
+                        <ul class="mechanics-list">
+                            <li>Functional security camera system with TV static effects.</li>
+                            <li>Resource management (power drain from doors, lights, and cameras).</li>
+                            <li>Frame-by-frame jumpscare animations using CSS/JS logic.</li>
+                            <li>Screen transitions and persistent data tracking.</li>
+                        </ul>
+
+                        <p class="disclaimer-text"><strong>Disclaimer:</strong> This is a non-profit fan project created for educational purposes. All original assets, concepts, character designs, and audio belong entirely to Scott Cawthon.</p>
+                    </div>
+                </div>
+
+                <!-- Uses the JS function instead of instantly loading the page -->
+                <button class="back-btn" type="button" onclick="transitionToPage('Entrance.html')">&lt;&lt; Back to Menu</button>
+            </main>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT TO CONTROL THE FLASH -->
+    <script>
+        // Trigger the flash immediately when the page loads.
+        window.addEventListener('load', function() {
+            playBlipFlash(1000);
+        });
+
+        function transitionToPage(targetPage) {
+            playBlipFlash(800, function() {
+                window.location.href = targetPage;
+            });
+        }
+
+        function playBlipFlash(duration, callback) {
+            const flashOverlay = document.getElementById('blip-flash-overlay');
+            if (!flashOverlay) {
+                if (callback) callback();
+                return;
+            }
+
+            flashOverlay.style.display = 'block';
+
+            const blipInterval = setInterval(function() {
+                const randomFrame = Math.floor(Math.random() * 11);
+                flashOverlay.style.backgroundPosition = `0% ${randomFrame * 10}%`;
+                flashOverlay.style.opacity = Math.random() > 0.5 ? '1' : '0.8';
+            }, 40);
+
+            setTimeout(function() {
+                clearInterval(blipInterval);
+                flashOverlay.style.display = 'none';
+                flashOverlay.style.opacity = '1';
+
+                if (callback) {
+                    callback();
+                }
+            }, duration);
+        }
+    </script>
+</body>
+</html>

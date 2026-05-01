@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FNAF 1 - Main Menu</title>
+    <style>
+        /* --- Base Setup --- */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
+            /* Closest web-safe font to FNAF */
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            user-select: none;
+            /* Prevents text highlighting */
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: #000;
+            border: 2px solid #111;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+            overflow: hidden;
+        }
+
+        /* --- Main Menu Background --- */
+        #menu-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('Background/xtv8q6ridky11.gif');
+            background-color: #111;
+            /* Fallback color just in case the gif loads slowly */
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* --- TV Static Overlay Effect --- */
+        .static-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: repeating-radial-gradient(circle at 17% 32%, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.05) 0.00085px);
+            animation: staticAnim 0.1s infinite;
+            pointer-events: none;
+            /* Lets you click through the static */
+            z-index: 10;
+        }
+
+        @keyframes staticAnim {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 10px 10px;
+            }
+        }
+
+        /* --- Scanlines Effect --- */
+        .scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            z-index: 11;
+            pointer-events: none;
+        }
+
+        /* ========================================= */
+        /* THE REAL BLIP FLASH OVERLAY               */
+        /* ========================================= */
+        #blip-flash-overlay {
+            display: none; /* Hidden until button click */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            
+            background-image: url('Screenpart/PC\ _\ Computer\ -\ Five\ Nights\ at\ Freddy\'s\ -\ Miscellaneous\ -\ Blip\ Flash.png'); 
+            
+            /* Because the sprite sheet is stacked vertically, this stretches it so 1 frame fits the screen */
+            background-size: 100% 1100%; 
+            background-repeat: no-repeat;
+            
+            z-index: 100; /* Over top of everything */
+            pointer-events: none;
+        }
+
+        /* --- Title Text --- */
+        #title {
+            position: absolute;
+            top: 10%;
+            left: 5%;
+            font-size: 4vw;
+            /* Scales with the screen */
+            font-weight: normal;
+            line-height: 1.2;
+            text-shadow: 2px 2px 5px #000;
+            z-index: 20;
+        }
+
+        /* --- Menu Options --- */
+        #menu-options {
+            position: absolute;
+            top: 50%;
+            left: 5%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 20;
+        }
+
+        .menu-item {
+            font-size: 2.5vw;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .menu-item:hover {
+            opacity: 1;
+        }
+
+        /* The little arrows that appear when you hover */
+        .cursor {
+            opacity: 0;
+            margin-right: 15px;
+            font-weight: bold;
+        }
+
+        .menu-item:hover .cursor {
+            opacity: 1;
+        }
+
+        .sub-text {
+            font-size: 1.5vw;
+            color: #aaa;
+            margin-left: 15px;
+            display: block;
+        }
+
+        /* --- Copyright Text --- */
+        #copyright {
+            position: absolute;
+            bottom: 3%;
+            right: 2%;
+            font-size: 1vw;
+            color: #555;
+            z-index: 20;
+        }
+
+        /* --- Sub-screens (About, Instructions) --- */
+        .sub-screen {
+            display: none;
+            /* Hidden until clicked */
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            /* Dark overlay */
+            z-index: 30;
+            padding: 8% 5%;
+            box-sizing: border-box;
+        }
+
+        .screen-title {
+            font-size: 3vw;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 5px #000;
+        }
+
+        .screen-content {
+            font-size: 1.5vw;
+            line-height: 1.8;
+            max-width: 800px;
+            color: #ddd;
+        }
+
+        .back-btn {
+            position: absolute;
+            bottom: 5%;
+            left: 5%;
+            font-size: 2vw;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .back-btn:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div id="game-container">
+
+        <!-- MAIN MENU SCREEN -->
+        <div id="menu-screen">
+            <!-- Visual Effects -->
+            <div class="static-overlay"></div>
+            <div class="scanlines"></div>
+
+            <!-- Title -->
+            <div id="title">
+                Five Nights<br>at <br> Freddy's Recreated
+            </div>
+
+            <!-- Clickable Options -->
+            <div id="menu-options">
+                <div class="menu-item" onclick="startGame(1)">
+                    <span class="cursor">&gt;&gt;</span>
+                    <div>New Game</div>
+                </div>
+
+                <div class="menu-item" onclick="continueGame()">
+                    <span class="cursor">&gt;&gt;</span>
+                    <div>
+                        Continue<br>
+                        <span class="sub-text" id="current-night-display">Night 1</span>
+                    </div>
+                </div>
+
+                <!-- Open embedded screens -->
+                <div class="menu-item" onclick="playBlipTransition('HowToPlay.html')">
+                    <span class="cursor">&gt;&gt;</span>
+                    <div>How to Play</div>
+                </div>
+
+                <!-- NOW TRIGGERS THE FLASH TRANSITION TO Aboutus.html -->
+                <div class="menu-item" onclick="playBlipTransition('Aboutus.html')">
+                    <span class="cursor">&gt;&gt;</span>
+                    <div>About Project</div>
+                </div>
+
+                <!-- Extras Button -->
+                <div class="menu-item" onclick="playBlipTransition('Extras.html')">
+                    <span class="cursor">&gt;&gt;</span>
+                    <div>Extras</div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div id="copyright">
+                &copy; 2014 Scott Cawthon, Spriters Resource
+            </div>
+        </div>
+
+        <!-- The Flash Element Overlay -->
+        <div id="blip-flash-overlay"></div>
+    </div>
+
+    <script>
+        // Placeholder variables for later
+        let currentNight = 1;
+
+        window.addEventListener('load', function () {
+            document.getElementById('current-night-display').innerText = "Night " + currentNight;
+        });
+
+        function startGame(night) {
+            console.log("Starting Night: " + night);
+            currentNight = night;
+            playBlipTransition('Game.html');
+        }
+
+        function continueGame() {
+            console.log("Continuing Night: " + currentNight);
+            playBlipTransition('Game.html');
+        }
+
+        // --- New UI Functions ---
+        function openScreen(screenId) {
+            // Shows the requested screen by changing its display style
+            document.getElementById(screenId).style.display = 'block';
+        }
+
+        function closeScreen(screenId) {
+            // Hides the requested screen
+            document.getElementById(screenId).style.display = 'none';
+        }
+
+        // --- The Flash Transition Logic ---
+        function playBlipTransition(targetPage) {
+            const flashOverlay = document.getElementById('blip-flash-overlay');
+            if (!flashOverlay) {
+                window.location.href = targetPage;
+                return;
+            }
+            
+            // 1. Show the flash overlay over the menu
+            flashOverlay.style.display = 'block';
+
+            // 2. Rapidly change the background position to simulate the glitching sprite sheet
+            const blipInterval = setInterval(() => {
+                // Pick a random frame between 0 and 10
+                const randomFrame = Math.floor(Math.random() * 11);
+                // Shift the sprite sheet image up based on the random frame percentage
+                flashOverlay.style.backgroundPosition = `0% ${randomFrame * 10}%`;
+            }, 30); // Super fast 30ms
+
+            // 3. After 400 milliseconds, stop the flash and load the next page
+            setTimeout(() => {
+                clearInterval(blipInterval);
+                
+                // Load the target page.
+                window.location.href = targetPage;
+            }, 400);
+        }
+    </script>
+</body>
+
+</html>

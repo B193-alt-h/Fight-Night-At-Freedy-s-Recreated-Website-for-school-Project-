@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FNAF 1 - How to Play</title>
+    <style>
+        /* --- Base Setup --- */
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
+            overflow: hidden; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            user-select: none;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100%;
+            max-width: 1280px;
+            aspect-ratio: 16 / 9;
+            background-color: #000;
+            border: 2px solid #111;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+            overflow: hidden;
+        }
+
+        /* --- THE BLIP FLASH OVERLAY --- */
+        #blip-flash-overlay {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('Screenpart/PC\ _\ Computer\ -\ Five\ Nights\ at\ Freddy\'s\ -\ Miscellaneous\ -\ Blip\ Flash.png'); 
+            background-size: 100% 1100%; 
+            background-repeat: no-repeat;
+            z-index: 100;
+            pointer-events: none;
+        }
+
+        /* --- Background Setup --- */
+        #menu-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('Background/xtv8q6ridky11.gif');
+            background-color: #111;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .static-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: repeating-radial-gradient(circle at 17% 32%, rgba(255, 255, 255, 0.05), rgba(0, 0, 0, 0.05) 0.00085px);
+            animation: staticAnim 0.1s infinite;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        @keyframes staticAnim {
+            0% { background-position: 0 0; }
+            100% { background-position: 10px 10px; }
+        }
+
+        .scanlines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            z-index: 11;
+            pointer-events: none;
+        }
+
+        /* --- Content Layout --- */
+        .content-container {
+            position: relative;
+            z-index: 30;
+            padding: 5% 8%;
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            background-color: rgba(0, 0, 0, 0.85); /* Darkens the background */
+            overflow-y: auto; /* Allows scrolling */
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Custom Scrollbar */
+        .content-container::-webkit-scrollbar {
+            width: 10px;
+        }
+        .content-container::-webkit-scrollbar-track {
+            background: #111;
+            border-left: 1px solid #333;
+        }
+        .content-container::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 5px;
+        }
+        .content-container::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+
+        .screen-title {
+            font-size: 3.5vw;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 5px #000;
+            border-bottom: 2px solid #555;
+            padding-bottom: 10px;
+        }
+
+        .screen-subtitle {
+            font-size: 1.5vw;
+            color: #aaa;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
+        .instruction-section {
+            margin-bottom: 40px;
+            max-width: 900px;
+        }
+
+        .char-title {
+            font-size: 2.2vw;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+
+        /* Character Colors */
+        .color-bonnie { color: #8A2BE2; } /* Purple */
+        .color-chica { color: #FFD700; }  /* Yellow */
+        .color-foxy { color: #FF4500; }   /* Orange-Red */
+        .color-freddy { color: #8B4513; } /* Brown */
+
+        .instruction-text {
+            font-size: 1.4vw;
+            line-height: 1.7;
+            color: #ddd;
+        }
+
+        .instruction-text ul {
+            margin-top: 10px;
+            margin-bottom: 20px;
+            padding-left: 30px;
+        }
+
+        .instruction-text li {
+            margin-bottom: 10px;
+        }
+
+        /* --- Footer Section (Back Button + Signature) --- */
+        .footer-bar {
+            margin-top: auto; /* Pushes to the bottom */
+            display: flex;
+            justify-content: space-between; /* Puts button on left, signature on right */
+            align-items: flex-end;
+            padding-top: 20px;
+            padding-bottom: 20px;
+        }
+
+        .back-btn {
+            border: 0;
+            background: transparent;
+            color: white;
+            font-family: inherit;
+            font-size: 2vw;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+            padding: 0;
+            text-align: left;
+        }
+
+        .back-btn:hover,
+        .back-btn:focus-visible {
+            opacity: 1;
+            text-shadow: 0 0 10px white;
+            outline: none;
+        }
+
+        /* --- William Afton Signature & Purple Guy --- */
+        .afton-signature {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1.8vw;
+            color: #7b2cbf; /* Dark eerie purple */
+            font-family: 'Courier New', Courier, monospace;
+            font-style: italic;
+            text-shadow: 1px 1px 5px rgba(123, 44, 191, 0.5);
+            opacity: 0.9;
+        }
+
+        /* CSS built 8-bit Purple Guy */
+        .purple-guy {
+            width: 20px;
+            height: 35px;
+            background-color: #5a189a; /* Iconic Purple Guy Color */
+            position: relative;
+            border-radius: 4px 4px 0 0;
+            box-shadow: 0 0 10px #5a189a;
+        }
+
+        /* Glowing White Eyes */
+        .purple-guy::before, .purple-guy::after {
+            content: '';
+            position: absolute;
+            top: 8px;
+            width: 5px;
+            height: 5px;
+            background-color: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 4px #fff;
+        }
+
+        .purple-guy::before { left: 3px; }
+        .purple-guy::after { right: 3px; }
+
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <!-- Overlay for transitions -->
+        <div id="blip-flash-overlay"></div>
+
+        <div id="menu-screen">
+            <div class="static-overlay"></div>
+            <div class="scanlines"></div>
+
+            <div class="content-container">
+                <div class="screen-title">Employee Survival Guide</div>
+                <div class="screen-subtitle">Fazbear Entertainment is not responsible for damage to property or person.</div>
+                
+                <div class="instruction-section">
+                    <div class="instruction-text">
+                        <p>Welcome to your new summer job at Freddy Fazbear's Pizza! Your primary duty is to monitor the security cameras and ensure nothing goes wrong after hours. You have a very limited power supply for the building. <strong>Using the monitor, turning on the hall lights, and closing the security doors will drain your power.</strong> If you run out of power, everything goes dark.</p>
+                        <p>Survive your shift from <strong>12:00 AM to 6:00 AM</strong>. To help you survive the week, here is a detailed breakdown of the animatronic behavior patterns.</p>
+                    </div>
+                </div>
+
+                <div class="instruction-section">
+                    <div class="char-title color-bonnie">Bonnie the Bunny</div>
+                    <div class="instruction-text">
+                        <ul>
+                            <li><strong>Active Nights:</strong> Highly active starting Night 1. He is usually the first to leave the Show Stage.</li>
+                            <li><strong>Behavior:</strong> Bonnie will always approach your office from the <strong>West Hall (Left Side)</strong>. He moves randomly and frequently between rooms.</li>
+                            <li><strong>How to Defend:</strong> Periodically check your Left Hall Light. If you see him standing in the doorway, <strong>close the Left Door immediately</strong> and wait for him to leave (check the light again to see his shadow).</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="instruction-section">
+                    <div class="char-title color-chica">Chica the Chicken</div>
+                    <div class="instruction-text">
+                        <ul>
+                            <li><strong>Active Nights:</strong> Active starting Night 1, usually moving shortly after Bonnie.</li>
+                            <li><strong>Behavior:</strong> Chica will always approach your office from the <strong>East Hall (Right Side)</strong>. She tends to linger in rooms longer than Bonnie. If she is in the Kitchen (Cam 6), the camera will be disabled, but you can hear pots and pans clanking.</li>
+                            <li><strong>How to Defend:</strong> Check your Right Hall Light. If she appears in the window, <strong>close the Right Door</strong> until she wanders away.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="instruction-section">
+                    <div class="char-title color-foxy">Foxy the Pirate Fox</div>
+                    <div class="instruction-text">
+                        <ul>
+                            <li><strong>Active Nights:</strong> Becomes active on Night 2 (or Night 1 if you neglect the cameras entirely).</li>
+                            <li><strong>Behavior:</strong> Foxy hides in Pirate Cove (Cam 1C). He requires constant, brief check-ins. If you check him too little, or too much, he will slowly emerge from his curtain.</li>
+                            <li><strong>How to Defend:</strong> Keep a regular eye on Cam 1C. If the curtain is completely wide open and Foxy is missing, <strong>close your Left Door immediately</strong>, THEN check the West Hall (Cam 2A) to see him sprint down the hall. If he hits your closed door, you will lose a chunk of power.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="instruction-section">
+                    <div class="char-title color-freddy">Freddy Fazbear</div>
+                    <div class="instruction-text">
+                        <ul>
+                            <li><strong>Active Nights:</strong> Freddy is mostly inactive until Night 3. He becomes highly aggressive on Nights 4 and 5.</li>
+                            <li><strong>Behavior:</strong> Freddy sneaks entirely in the dark. He is very hard to see on cameras - you can usually only spot his glowing eyes. Unlike Bonnie and Chica, <strong>Freddy will NOT appear in your door lights.</strong> He attacks from the Right Side.</li>
+                            <li><strong>How to Defend:</strong> You must track his movement via cameras. When he reaches the East Hall Corner (Cam 4B), you must <strong>close the Right Door</strong> whenever you look at the monitor, or else he will sneak in and end your run.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Footer Bar containing Back Button and Signature -->
+                <div class="footer-bar">
+                    <!-- Back button triggers the glitch transition -->
+                    <button class="back-btn" type="button" onclick="exitWithGlitch('Entrance.html')">&lt;&lt; Return to Main Menu</button>
+                    
+                    <!-- The Purple Guy Signature -->
+                    <div class="afton-signature">
+                        <span>- By William Afton</span>
+                        <div class="purple-guy"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Trigger glitch on load
+        window.addEventListener('load', function() {
+            playBlipFlash(600); 
+        });
+
+        // Handle the "Back to Menu" button with a glitch
+        function exitWithGlitch(target) {
+            playBlipFlash(500, function() {
+                window.location.href = target;
+            });
+        }
+
+        // Logic for the Glitch Flash (The "Big Flap")
+        function playBlipFlash(duration, callback) {
+            const flashOverlay = document.getElementById('blip-flash-overlay');
+            if (!flashOverlay) {
+                if (callback) callback();
+                return;
+            }
+            flashOverlay.style.display = 'block';
+            
+            const blipInterval = setInterval(() => {
+                // Randomly pick a frame, skipping the bottom green line frame
+                const randomFrame = Math.floor(Math.random() * 10);
+                flashOverlay.style.backgroundPosition = `0% ${randomFrame * 10}%`;
+            }, 30);
+            
+            setTimeout(() => {
+                clearInterval(blipInterval);
+                if (!callback) flashOverlay.style.display = 'none';
+                if (callback) callback();
+            }, duration);
+        }
+    </script>
+</body>
+</html>

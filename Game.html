@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FNAF 1 - Night Guard</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body, html {
+            width: 100%; height: 100%;
+            background: #000;
+            font-family: 'Consolas', 'Courier New', monospace;
+            overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+            color: white;
+            user-select: none;
+        }
+
+        #game-container {
+            position: relative;
+            width: min(100vw, calc(100vh * 1600 / 720));
+            height: min(100vh, calc(100vw * 720 / 1600));
+            aspect-ratio: 1600 / 720;
+            background: #000;
+            overflow: hidden;
+        }
+
+        /* ========== OFFICE ========== */
+        #office-background {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            overflow: hidden;
+            --office-frame-y: -0.555556%;
+            z-index: 1;
+            transition: transform 0.08s ease-out;
+            will-change: transform;
+        }
+        #office-background::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: var(--office-frame-y);
+            width: 100%;
+            height: 1104.166667%;
+            background-image: url('Background/OfficeBackground.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            z-index: 0;
+        }
+
+        .hall-light {
+            position: absolute; top: 0;
+            width: 18%; height: 100%;
+            background: radial-gradient(ellipse at center, rgba(200,200,140,0.4) 0%, rgba(0,0,0,0) 70%);
+            opacity: 0;
+            transition: opacity 0.12s;
+            pointer-events: none;
+            z-index: 2;
+        }
+        #light-left-visual  { left: 0%; }
+        #light-right-visual { right: 0%; }
+
+        .door-visual {
+            display: none;
+        }
+
+        .button-panel {
+            position: absolute;
+            top: 44%;
+            height: 18%;
+            aspect-ratio: var(--button-crop-w) / 210;
+            overflow: hidden;
+            z-index: 4;
+            --button-crop-w: 82;
+            --button-img-left: -4.878049%;
+            --button-img-top: -11.904762%;
+            --button-img-width: 473.170732%;
+        }
+        .button-panel::before {
+            content: "";
+            position: absolute;
+            left: var(--button-img-left);
+            top: var(--button-img-top);
+            width: var(--button-img-width);
+            height: 240.952381%;
+            background-image: url('Button/Office_door_Buttons.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            pointer-events: none;
+        }
+        #panel-left  { left: 18.1%; }
+        #panel-right { right: 19.3%; }
+
+        .click-zone {
+            position: relative;
+            z-index: 1;
+            width: 100%; height: 50%;
+            cursor: pointer;
+        }
+
+        /* ========== CRT FX ========== */
+        .static-overlay {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-image: repeating-radial-gradient(circle at 17% 32%, rgba(255,255,255,0.03), rgba(0,0,0,0.03) 0.00085px);
+            animation: staticAnim 0.1s infinite;
+            pointer-events: none; z-index: 20;
+        }
+        @keyframes staticAnim {
+            0%   { background-position: 0 0; }
+            100% { background-position: 10px 10px; }
+        }
+        .scanlines {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: linear-gradient(rgba(18,16,16,0) 50%, rgba(0,0,0,0.25) 50%),
+                        linear-gradient(90deg, rgba(255,0,0,0.06), rgba(0,255,0,0.02), rgba(0,0,255,0.06));
+            background-size: 100% 4px, 3px 100%;
+            z-index: 21; pointer-events: none;
+        }
+
+        /* ========== HUD ========== */
+        #hud-layer {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 30; pointer-events: none;
+            padding: 2%; box-sizing: border-box;
+        }
+        #time-display  { position: absolute; top: 3%; right: 3%; font-size: 3.5vw; text-shadow: 2px 2px 0 #000; }
+        #night-display { position: absolute; top: 12%; right: 3%; font-size: 1.5vw; color: #ccc; text-shadow: 2px 2px 0 #000; }
+
+        #power-container {
+            position: absolute; bottom: 11%; left: 2%;
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        #power-label {
+            font-size: 1.3vw; color: #ccc;
+            text-shadow: 1px 1px 0 #000, 0 0 6px rgba(0,0,0,0.8);
+            letter-spacing: 1px;
+        }
+        #power-label span { color: #fff; font-size: 1.5vw; }
+
+        #usage-label {
+            font-size: 1.1vw; color: #aaa;
+            text-shadow: 1px 1px 0 #000;
+            letter-spacing: 1px;
+            margin-bottom: 2px;
+        }
+
+        #power-bar-track {
+            display: flex; gap: 3px; align-items: flex-end;
+        }
+        .usage-bar {
+            width: 1.4vw;
+            background: #1a1a1a;
+            border: 1px solid #000;
+            border-radius: 1px;
+            transition: background 0.2s, height 0.1s, box-shadow 0.2s;
+        }
+        .usage-bar:nth-child(1) { height: 1.4vw; }
+        .usage-bar:nth-child(2) { height: 1.8vw; }
+        .usage-bar:nth-child(3) { height: 2.2vw; }
+        .usage-bar:nth-child(4) { height: 2.6vw; }
+        .usage-bar:nth-child(5) { height: 3.0vw; }
+
+        .usage-bar.active-1 { background: #22dd00; box-shadow: 0 0 5px #22dd00; }
+        .usage-bar.active-2 { background: #88dd00; box-shadow: 0 0 5px #88dd00; }
+        .usage-bar.active-3 { background: #ddcc00; box-shadow: 0 0 5px #ddcc00; }
+        .usage-bar.active-4 { background: #dd6600; box-shadow: 0 0 5px #dd6600; }
+        .usage-bar.active-5 { background: #dd1100; box-shadow: 0 0 5px #dd1100; animation: barFlicker 0.3s infinite; }
+
+        @keyframes barFlicker {
+            0%, 100% { opacity: 1; }
+            50%       { opacity: 0.6; }
+        }
+
+        #camera-toggle-zone {
+            position: absolute; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 30%; height: 8%;
+            background: #111;
+            border: 2px solid #333;
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+            pointer-events: auto; cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+            gap: 8px;
+            transition: background 0.15s;
+        }
+        #camera-toggle-zone:hover { background: #1c1c1c; }
+        .cam-tab-arrow { font-size: 1.4vw; color: #777; transition: color 0.15s; }
+        #camera-toggle-zone:hover .cam-tab-arrow { color: #bbb; }
+        .cam-tab-text  { font-size: 0.85vw; color: #555; letter-spacing: 2px; text-transform: uppercase; }
+
+        /* ========== CAMERA TABLET ========== */
+        #camera-overlay {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 50;
+            display: none;
+            background: #0c0c0c;
+        }
+        #camera-overlay.open { display: block; }
+
+        #cam-monitor-frame {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 68%;
+            background: #000;
+            border-bottom: 3px solid #222;
+            overflow: hidden;
+        }
+        #cam-monitor-frame::after {
+            content: '';
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background:
+                repeating-linear-gradient(0deg, rgba(0,0,0,0.15) 0px, rgba(0,0,0,0.15) 1px, transparent 1px, transparent 3px),
+                radial-gradient(ellipse at center, rgba(60,100,50,0.06) 0%, rgba(0,0,0,0.5) 100%);
+            pointer-events: none; z-index: 10;
+        }
+        #cam-screen { width: 100%; height: 100%; position: relative; overflow: hidden; }
+        #cam-view {
+            width: 100%; height: 100%; object-fit: cover; display: block;
+            filter: brightness(0.82) contrast(1.1) saturate(0.65) sepia(0.1);
+        }
+        #cam-static {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('Screenpart/PC _ Computer - Five Nights at Freddy\'s - Miscellaneous - Static.png');
+            background-size: cover; opacity: 0; pointer-events: none; z-index: 8;
+            transition: opacity 0.05s;
+        }
+        #cam-label {
+            position: absolute; top: 5%; left: 2%;
+            z-index: 9; font-family: 'Consolas', monospace; line-height: 1.3;
+        }
+        #cam-label .cam-id   { font-size: 1.6vw; color: #ddd; display: block; letter-spacing: 2px; text-shadow: 0 0 6px rgba(180,220,160,0.5); }
+        #cam-label .cam-room { font-size: 0.9vw; color: #888; display: block; letter-spacing: 1px; }
+        #cam-you-label {
+            position: absolute; top: 5%; right: 2%;
+            font-size: 0.9vw; color: #666; letter-spacing: 3px; z-index: 9;
+            font-family: 'Consolas', monospace;
+        }
+
+        #cam-bottom-panel {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 32%;
+            background: #0e0e0e;
+            display: flex;
+            flex-direction: row;
+            align-items: stretch;
+            padding: 6px 8px;
+            gap: 8px;
+            border-top: 2px solid #222;
+        }
+
+        #cam-left-panel {
+            display: flex; flex-direction: column;
+            gap: 5px; width: 22%;
+        }
+        #cam-map-box {
+            flex: 1;
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 2px;
+            display: flex; justify-content: center; align-items: center;
+            color: #333; font-size: 0.6vw; font-family: 'Consolas', monospace;
+            letter-spacing: 1px; text-transform: uppercase;
+        }
+        #close-camera {
+            height: 26%;
+            background: #141414;
+            border: 1px solid #2c2c2c;
+            border-radius: 2px;
+            color: #555; font-family: 'Consolas', monospace;
+            font-size: 0.75vw; letter-spacing: 2px; cursor: pointer;
+            display: flex; justify-content: center; align-items: center;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+            width: 100%;
+        }
+        #close-camera:hover { background: #1e1e1e; color: #bbb; border-color: #555; }
+
+        #cam-bar {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 8px;
+            padding: 4px;
+        }
+
+        .cam-btn {
+            background: rgba(10, 20, 15, 0.8);
+            border: 1px solid #2a4a3a;
+            border-radius: 4px;
+            color: #6a8a7a;
+            font-family: 'Consolas', monospace;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            transition: all 0.15s ease;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cam-btn .cam-thumb {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            opacity: 0.15;
+            z-index: 0;
+            transition: opacity 0.2s;
+        }
+
+        .cam-btn > div {
+            position: relative;
+            z-index: 1;
+        }
+
+        .cam-btn:hover {
+            background: rgba(20, 40, 30, 0.9);
+            border-color: #4a8a6a;
+            color: #aadaea;
+            box-shadow: inset 0 0 15px rgba(0,255,100,0.1), 0 0 5px rgba(0,255,100,0.2);
+        }
+        .cam-btn:hover .cam-thumb {
+            opacity: 0.3;
+        }
+
+        .cam-btn.active {
+            background: rgba(0, 40, 20, 0.95);
+            border-color: #00ff88;
+            color: #ffffff;
+            box-shadow: inset 0 0 20px rgba(0, 255, 136, 0.2), 0 0 8px rgba(0, 255, 136, 0.3);
+            text-shadow: 0 0 4px #00ff88;
+        }
+        .cam-btn.active .cam-thumb {
+            opacity: 0.4;
+        }
+
+        .cam-btn .cam-id-tag  {
+            font-size: 1vw; 
+            font-weight: bold; 
+            letter-spacing: 1.5px;
+            margin-bottom: 2px;
+        }
+        .cam-btn .cam-name-tag {
+            font-size: 0.6vw; 
+            text-transform: uppercase;
+        }
+        
+        .cam-btn:last-child { grid-column: span 1; }
+
+        /* ========== SCREENS ========== */
+        #transition-screen {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #000; z-index: 100;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            transition: opacity 1.5s ease;
+        }
+        #transition-time  { font-size: 5vw; margin-bottom: 10px; }
+        #transition-night { font-size: 2vw; color: #aaa; }
+
+        #powerout-screen {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #000; z-index: 90;
+            display: none;
+            flex-direction: column; justify-content: center; align-items: center;
+            gap: 20px;
+        }
+        #powerout-screen.visible { display: flex; }
+        #powerout-text { font-size: 3vw; color: #ff6600; }
+        #freddy-face-powerout {
+            width: 20%; opacity: 0;
+            transition: opacity 2s;
+        }
+
+        #win-screen {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #000; z-index: 95;
+            display: none;
+            flex-direction: column; justify-content: center; align-items: center;
+        }
+        #win-screen.visible { display: flex; }
+        #win-text { font-size: 5vw; color: #ffcc00; text-align: center; }
+        #win-sub  { font-size: 2vw; color: #aaa; margin-top: 10px; }
+        #win-screen button {
+            margin-top: 30px; padding: 12px 30px;
+            font-size: 1.5vw; font-family: 'Consolas', monospace;
+            background: #222; color: #fff;
+            border: 2px solid #fff; cursor: pointer;
+        }
+
+        /* JUMPSCARE SCREEN - Canvas based */
+        #jumpscare-screen {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 200; display: none;
+            background: #000;
+        }
+        #jumpscare-screen.visible { display: block; }
+
+        #jumpscare-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            image-rendering: pixelated;
+            background: #000;
+        }
+
+        #gameover-screen {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: #000; z-index: 210;
+            display: none;
+            flex-direction: column; justify-content: center; align-items: center;
+        }
+        #gameover-screen.visible { display: flex; }
+        #gameover-text { font-size: 4vw; color: #cc0000; margin-bottom: 20px; }
+        #gameover-screen button {
+            padding: 12px 30px; font-size: 1.5vw;
+            font-family: 'Consolas', monospace;
+            background: #1a0000; color: #ff4444;
+            border: 2px solid #cc0000; cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div id="game-container">
+
+    <!-- Transition -->
+    <div id="transition-screen">
+        <div id="transition-time">12:00 AM</div>
+        <div id="transition-night">Night 1</div>
+    </div>
+
+    <!-- Office -->
+    <div id="office-background">
+        <div id="light-left-visual"  class="hall-light"></div>
+        <div id="door-left-visual"   class="door-visual"></div>
+        <div id="panel-left" class="button-panel">
+            <div class="click-zone" onclick="toggleDoor('left')"></div>
+            <div class="click-zone" onclick="toggleLight('left')"></div>
+        </div>
+
+        <div id="light-right-visual" class="hall-light"></div>
+        <div id="door-right-visual"  class="door-visual"></div>
+        <div id="panel-right" class="button-panel">
+            <div class="click-zone" onclick="toggleDoor('right')"></div>
+            <div class="click-zone" onclick="toggleLight('right')"></div>
+        </div>
+    </div>
+
+    <div class="static-overlay"></div>
+    <div class="scanlines"></div>
+
+    <!-- HUD -->
+    <div id="hud-layer">
+        <div id="time-display">12 AM</div>
+        <div id="night-display">Night 1</div>
+        <div id="power-container">
+            <div id="power-label">Power left: <span id="power-percent">100</span>%</div>
+            <div id="usage-label">Usage</div>
+            <div id="power-bar-track">
+                <div class="usage-bar active-1" id="use-1"></div>
+                <div class="usage-bar" id="use-2"></div>
+                <div class="usage-bar" id="use-3"></div>
+                <div class="usage-bar" id="use-4"></div>
+                <div class="usage-bar" id="use-5"></div>
+            </div>
+        </div>
+        <div id="camera-toggle-zone" onclick="openCamera()">
+            <span class="cam-tab-arrow">^ ^</span>
+            <span class="cam-tab-text">Camera</span>
+            <span class="cam-tab-arrow">^ ^</span>
+        </div>
+    </div>
+
+    <!-- Camera Overlay -->
+    <div id="camera-overlay">
+        <div id="cam-monitor-frame">
+            <div id="cam-screen">
+                <img id="cam-view" src="" alt="Camera Feed">
+                <div id="cam-static"></div>
+                <div id="cam-label">
+                    <span class="cam-id">CAM 1A</span>
+                    <span class="cam-room">Show Stage</span>
+                </div>
+                <div id="cam-you-label">YOU</div>
+            </div>
+        </div>
+        <div id="cam-bottom-panel">
+            <div id="cam-left-panel">
+                <div id="cam-map-box">MAP</div>
+                <button id="close-camera" onclick="closeCamera()">▼ LOWER MONITOR</button>
+            </div>
+            <div id="cam-bar"><!-- injected by JS --></div>
+        </div>
+    </div>
+
+    <!-- Power Out -->
+    <div id="powerout-screen">
+        <div id="powerout-text">POWER OUTAGE</div>
+        <!-- Using the single image just for the brief power-out flicker -->
+        <img id="freddy-face-powerout" src="Jumpscare/Freedy_Jumpscare.png" alt="">
+    </div>
+
+    <!-- Win -->
+    <div id="win-screen">
+        <div id="win-text">6 AM</div>
+        <div id="win-sub">You survived the night!</div>
+        <button onclick="restartGame()">Play Again</button>
+    </div>
+
+    <!-- CANVAS JUMPSCARE SCREEN -->
+    <div id="jumpscare-screen">
+        <canvas id="jumpscare-canvas"></canvas>
+    </div>
+
+    <!-- Game Over -->
+    <div id="gameover-screen">
+        <div id="gameover-text">YOU WERE TERMINATED</div>
+        <button onclick="restartGame()">Try Again</button>
+    </div>
+
+</div>
+
+<script>
+// =====================================================
+//  STATE
+// =====================================================
+let currentPower   = 100;
+let powerUsage     = 1;
+let isCameraOpen   = false;
+let isLeftDoorClosed  = false;
+let isRightDoorClosed = false;
+let isLeftLightOn  = false;
+let isRightLightOn = false;
+let gameRunning    = false;
+let currentHour    = 5;   // 0=12AM … 5=5AM, 6=6AM win
+let currentCam     = 0;   // index into cameras array
+let powerInterval, aiInterval, timeInterval, jumpscareInterval;
+
+// =====================================================
+//  CAMERAS
+// =====================================================
+const cameras = [
+    { id: 'CAM 1', name: 'Show Stage',    img: "Background/PC _ Computer - Five Nights at Freddy's - Rooms - Show Stage.png" },
+    { id: 'CAM 2', name: 'Dining Area',   img: "Background/PC _ Computer - Five Nights at Freddy's - Rooms - Dining Area.png" },
+    { id: 'CAM 3', name: 'Pirate Cove',   img: "Background/PC _ Computer - Five Nights at Freddy's - Rooms - Pirate Cove.png" },
+    { id: 'CAM 4', name: 'West Hall',     img: "Background/PC _ Computer - Five Nights at Freddy's - Rooms - East Hall.png" },
+    { id: 'CAM 5', name: 'W.Hall Corner', img: "Background/PC _ Computer - Five Nights at Freddy's - Rooms - East Hall (1).png" },
+    { id: 'CAM 6', name: 'Supply Closet', img: "Background/PC _ Computer - Five Nights at Freddy's - Rooms - Supply Closet.png" },
+    { id: 'CAM 7', name: 'Backstage',     img: "Background/PC _ Computer - Five Nights at Freddy's - Rooms - Backstage.png" },
+    { id: 'CAM 8', name: 'Restrooms',     img: "Background/PC _ Computer - Five Nights at Freddy's - Rooms - Restrooms.png" },
+];
+
+// =====================================================
+//  ANIMATRONIC AI (Updated with exact jsFrames and JPGs)
+// =====================================================
+const animatronics = {
+    freddy: {
+        name: 'Freddy', level: 0, pos: 0, atDoor: false, side: null, doorSide: 'left',
+        path: [0, 1, 3, 4],  
+        jumpscare: 'Jumpscare/Freedy_Jumpscare.png', 
+        jsFrames: 20 
+    },
+    bonnie: {
+        name: 'Bonnie', level: 3, pos: 0, atDoor: false, side: null, doorSide: 'left',
+        path: [0, 1, 3, 4],
+        jumpscare: 'Jumpscare/bonnie_jumpscare.png', 
+        jsFrames: 11 
+    },
+    chica: {
+        name: 'Chica', level: 1, pos: 0, atDoor: false, side: null, doorSide: 'right',
+        path: [0, 1, 7, 6],  
+        jumpscare: 'Jumpscare/Chica_jumpscare.png', 
+        jsFrames: 16 
+    },
+    foxy: {
+        name: 'Foxy', level: 1, pos: 2, atDoor: false, side: null, doorSide: 'left',
+        path: [2, 3, 4],
+        jumpscare: 'Jumpscare/Foxy_Jumpscare.png', 
+        jsFrames: 21 
+    }
+};
+
+// =====================================================
+//  TIMES
+// =====================================================
+const timeLabels = ['12 AM','1 AM','2 AM','3 AM','4 AM','5 AM','6 AM'];
+const HOUR_DURATION_MS = 90000;
+
+// =====================================================
+//  INIT
+// =====================================================
+window.addEventListener('load', () => {
+    buildCamBar();
+    preloadJumpscareImages();
+    const trans = document.getElementById('transition-screen');
+    setTimeout(() => {
+        trans.style.opacity = '0';
+        setTimeout(() => {
+            trans.style.display = 'none';
+            startGame();
+        }, 1500);
+    }, 2500);
+});
+
+function startGame() {
+    gameRunning    = true;
+    currentPower   = 100;
+    currentHour    = 0;
+    isLeftDoorClosed  = false;
+    isRightDoorClosed = false;
+    isLeftLightOn  = false;
+    isRightLightOn = false;
+    updatePanels();
+    updatePowerUsageDisplay();
+    updateTimeDisplay();
+
+    animatronics.freddy.pos = 0; animatronics.freddy.atDoor = false;
+    animatronics.bonnie.pos = 0; animatronics.bonnie.atDoor = false;
+    animatronics.chica.pos  = 0; animatronics.chica.atDoor  = false;
+    animatronics.foxy.pos   = 2; animatronics.foxy.atDoor   = false;
+    updateOfficeFrame();
+
+    powerInterval = setInterval(drainPower, 1000);
+    aiInterval = setInterval(tickAI, 5000);
+    timeInterval = setInterval(advanceHour, HOUR_DURATION_MS);
+}
+
+function restartGame() {
+    clearInterval(powerInterval);
+    clearInterval(aiInterval);
+    clearInterval(timeInterval);
+    clearTimeout(jumpscareInterval); 
+    document.getElementById('gameover-screen').classList.remove('visible');
+    document.getElementById('win-screen').classList.remove('visible');
+    document.getElementById('powerout-screen').classList.remove('visible');
+    document.getElementById('jumpscare-screen').classList.remove('visible');
+    document.getElementById('office-background').style.display = '';
+    document.getElementById('hud-layer').style.display = '';
+    startGame();
+}
+
+// =====================================================
+//  MOUSE PAN
+// =====================================================
+const gameContainer = document.getElementById('game-container');
+const officeBg      = document.getElementById('office-background');
+const OFFICE_FRAME_COUNT = 11;
+
+const OFFICE_FRAMES = {
+    normal: 0, leftLight: 2, rightLight: 3, leftVisitor: 4, rightVisitor: 5, powerOut: 9
+};
+
+function setOfficeFrame(frameIndex) {
+    const clampedFrame = Math.max(0, Math.min(OFFICE_FRAME_COUNT - 1, frameIndex));
+    const sourceTop = clampedFrame * 722 + 4;
+    officeBg.style.setProperty('--office-frame-y', `${-(sourceTop / 720) * 100}%`);
+}
+
+function isVisitorAtDoor(side) {
+    return Object.values(animatronics).some((a) => a.atDoor && a.doorSide === side);
+}
+
+function updateOfficeFrame() {
+    if (isLeftLightOn) {
+        setOfficeFrame(isVisitorAtDoor('left') ? OFFICE_FRAMES.leftVisitor : OFFICE_FRAMES.leftLight);
+    } else if (isRightLightOn) {
+        setOfficeFrame(isVisitorAtDoor('right') ? OFFICE_FRAMES.rightVisitor : OFFICE_FRAMES.rightLight);
+    } else {
+        setOfficeFrame(OFFICE_FRAMES.normal);
+    }
+}
+
+gameContainer.addEventListener('mousemove', (e) => {
+    if (isCameraOpen) return;
+    const rect = gameContainer.getBoundingClientRect();
+    let pct = (e.clientX - rect.left) / rect.width;
+    pct = Math.max(0, Math.min(1, pct));
+    const maxScroll = officeBg.offsetWidth - gameContainer.offsetWidth;
+    officeBg.style.transform = `translateX(-${pct * maxScroll}px)`;
+});
+
+// =====================================================
+//  DOORS & LIGHTS
+// =====================================================
+function toggleDoor(side) {
+    if (!gameRunning) return;
+    if (side === 'left') {
+        isLeftDoorClosed = !isLeftDoorClosed;
+        document.getElementById('door-left-visual').classList.toggle('closed', isLeftDoorClosed);
+    } else {
+        isRightDoorClosed = !isRightDoorClosed;
+        document.getElementById('door-right-visual').classList.toggle('closed', isRightDoorClosed);
+    }
+    updatePanels();
+    calculatePowerUsage();
+}
+
+function toggleLight(side) {
+    if (!gameRunning) return;
+    if (side === 'left') {
+        isLeftLightOn = !isLeftLightOn;
+        if (isLeftLightOn) { isRightLightOn = false; document.getElementById('light-right-visual').style.opacity = '0'; }
+        document.getElementById('light-left-visual').style.opacity = isLeftLightOn ? '1' : '0';
+    } else {
+        isRightLightOn = !isRightLightOn;
+        if (isRightLightOn) { isLeftLightOn = false; document.getElementById('light-left-visual').style.opacity = '0'; }
+        document.getElementById('light-right-visual').style.opacity = isRightLightOn ? '1' : '0';
+    }
+    updateOfficeFrame();
+    updatePanels();
+    calculatePowerUsage();
+}
+
+// =====================================================
+//  BUTTON PANEL SPRITES
+// =====================================================
+const BUTTON_PANEL_FRAMES = [
+    [ { x: 4, y: 25, w: 82 }, { x: 107, y: 25, w: 75 }, { x: 203, y: 25, w: 75 }, { x: 299, y: 25, w: 85 } ],
+    [ { x: 4, y: 276, w: 85 }, { x: 109, y: 276, w: 76 }, { x: 205, y: 276, w: 76 }, { x: 301, y: 276, w: 83 } ]
+];
+
+function setButtonPanelFrame(panel, frame) {
+    panel.style.setProperty('--button-crop-w', frame.w);
+    panel.style.setProperty('--button-img-left', `${-(frame.x / frame.w) * 100}%`);
+    panel.style.setProperty('--button-img-top', `${-(frame.y / 210) * 100}%`);
+    panel.style.setProperty('--button-img-width', `${(388 / frame.w) * 100}%`);
+}
+
+function updatePanels() {
+    const colL = (isLeftDoorClosed  ? 2 : 0) + (isLeftLightOn  ? 1 : 0);
+    const colR = (isRightDoorClosed ? 2 : 0) + (isRightLightOn ? 1 : 0);
+    setButtonPanelFrame(document.getElementById('panel-left'), BUTTON_PANEL_FRAMES[0][colL]);
+    setButtonPanelFrame(document.getElementById('panel-right'), BUTTON_PANEL_FRAMES[1][colR]);
+}
+
+// =====================================================
+//  POWER
+// =====================================================
+function calculatePowerUsage() {
+    let u = 1;
+    if (isLeftDoorClosed)  u++;
+    if (isRightDoorClosed) u++;
+    if (isLeftLightOn)     u++;
+    if (isRightLightOn)    u++;
+    if (isCameraOpen)      u++;
+    powerUsage = Math.min(5, u);
+    updatePowerUsageDisplay();
+}
+
+function drainPower() {
+    if (!gameRunning) return;
+    const drainRates = [0, 0.1, 0.2, 0.35, 0.5, 0.75];
+    currentPower -= drainRates[powerUsage];
+    currentPower = Math.max(0, currentPower);
+    document.getElementById('power-percent').textContent = Math.floor(currentPower);
+
+    if (currentPower <= 0) triggerPowerOut();
+}
+
+function updatePowerUsageDisplay() {
+    for (let i = 1; i <= 5; i++) {
+        const bar = document.getElementById('use-' + i);
+        bar.className = 'usage-bar';
+        if (i <= powerUsage) bar.classList.add('active-' + i);
+    }
+}
+
+function triggerPowerOut() {
+    if (!gameRunning) return;
+    gameRunning = false;
+    clearInterval(powerInterval); clearInterval(aiInterval); clearInterval(timeInterval);
+
+    document.getElementById('office-background').style.display = 'none';
+    document.getElementById('hud-layer').style.display = 'none';
+    const po = document.getElementById('powerout-screen');
+    po.classList.add('visible');
+
+    setTimeout(() => {
+        document.getElementById('freddy-face-powerout').style.opacity = '1';
+        setTimeout(() => triggerJumpscare(animatronics.freddy), 5000);
+    }, 10000);
+}
+
+// =====================================================
+//  TIME
+// =====================================================
+function advanceHour() {
+    if (!gameRunning) return;
+    currentHour++;
+    updateTimeDisplay();
+    animatronics.freddy.level = Math.min(20, currentHour * 1);
+    animatronics.bonnie.level = Math.min(20, 3 + currentHour * 2);
+    animatronics.chica.level  = Math.min(20, 1 + currentHour * 2);
+    animatronics.foxy.level   = Math.min(20, 1 + currentHour * 2);
+
+    if (currentHour >= 6) triggerWin();
+}
+
+function updateTimeDisplay() {
+    document.getElementById('time-display').textContent = timeLabels[Math.min(currentHour, 6)];
+}
+
+function triggerWin() {
+    gameRunning = false;
+    clearInterval(powerInterval); clearInterval(aiInterval); clearInterval(timeInterval);
+    if (isCameraOpen) closeCamera();
+    document.getElementById('win-screen').classList.add('visible');
+}
+
+// =====================================================
+//  ANIMATRONIC AI
+// =====================================================
+function tickAI() {
+    if (!gameRunning) return;
+    for (const key in animatronics) {
+        const a = animatronics[key];
+        const roll = Math.floor(Math.random() * 20);
+        if (roll < a.level) {
+            moveAnimatronic(a);
+        }
+    }
+}
+
+function moveAnimatronic(a) {
+    const pathLen = a.path.length;
+    const curIdx  = a.path.indexOf(a.pos);
+
+    if (curIdx === -1) {
+        a.pos = a.path[0];
+        return;
+    }
+
+    if (curIdx < pathLen - 1) {
+        a.pos = a.path[curIdx + 1];
+    } else {
+        a.atDoor = true;
+        updateOfficeFrame();
+        checkDoorAttack(a);
+    }
+}
+
+function checkDoorAttack(a) {
+    if (!a.atDoor) return;
+    const doorClosed = a.doorSide === 'left' ? isLeftDoorClosed : isRightDoorClosed;
+    if (!doorClosed) {
+        setTimeout(() => {
+            if (gameRunning) triggerJumpscare(a);
+        }, 1000 + Math.random() * 2000);
+    } else {
+        setTimeout(() => {
+            a.atDoor = false;
+            a.pos = a.path[0];
+            updateOfficeFrame();
+        }, 3000 + Math.random() * 5000);
+    }
+}
+
+// =====================================================
+//  ANIMATED JUMPSCARE (Canvas-based, frame-accurate)
+// =====================================================
+
+// Pre-load all jumpscare images at startup
+const jumpscareImages = {};
+function preloadJumpscareImages() {
+    const sources = {
+        freddy: animatronics.freddy.jumpscare,
+        bonnie: animatronics.bonnie.jumpscare,
+        chica:  animatronics.chica.jumpscare,
+        foxy:   animatronics.foxy.jumpscare
+    };
+    for (const key in sources) {
+        const img = new Image();
+        img.src = sources[key];
+        jumpscareImages[key] = img;
+    }
+}
+
+function triggerJumpscare(animatronicData) {
+    if (!gameRunning && document.getElementById('powerout-screen').classList.contains('visible') === false) return;
+    gameRunning = false;
+    clearInterval(powerInterval); clearInterval(aiInterval); clearInterval(timeInterval);
+
+    const jsScreen = document.getElementById('jumpscare-screen');
+    const canvas   = document.getElementById('jumpscare-canvas');
+    const ctx      = canvas.getContext('2d');
+
+    // Find which key this animatronic is
+    const key = Object.keys(animatronics).find(k => animatronics[k] === animatronicData) || 'freddy';
+    const img = jumpscareImages[key];
+    const totalFrames = animatronicData.jsFrames;
+
+    // Size canvas to container
+    const container = document.getElementById('game-container');
+    canvas.width  = container.offsetWidth;
+    canvas.height = container.offsetHeight;
+
+    jsScreen.classList.add('visible');
+
+    let currentFrame = 0;
+    const frameW = img.naturalWidth;
+    // Math.floor prevents sub-pixel gaps that bleed through as color artifacts
+    const frameH = Math.floor(img.naturalHeight / totalFrames);
+
+    function drawFrame(index) {
+        ctx.fillStyle = '#000';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // Math.round on srcY prevents fractional pixel bleeding between frames
+        const srcY = Math.round(index * frameH);
+        ctx.drawImage(
+            img,
+            0, srcY,
+            frameW, frameH,
+            0, 0,
+            canvas.width, canvas.height
+        );
+    }
+
+    function waitForImage() {
+        if (img.complete && img.naturalHeight > 0) {
+            runAnimation();
+        } else {
+            img.onload = runAnimation;
+        }
+    }
+
+    function runAnimation() {
+        drawFrame(0);
+        // Stagger frame timings: start fast (rush in), slow slightly at end
+        const frameDurations = [];
+        for (let i = 0; i < totalFrames; i++) {
+            // First 40% of frames: fast (30ms), last 60%: slightly slower (50ms)
+            frameDurations.push(i < totalFrames * 0.4 ? 30 : 50);
+        }
+
+        let frameIdx = 0;
+        function nextFrame() {
+            if (frameIdx >= totalFrames) {
+                // Done: show game over after brief pause
+                setTimeout(() => {
+                    jsScreen.classList.remove('visible');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    document.getElementById('gameover-screen').classList.add('visible');
+                }, 300);
+                return;
+            }
+            drawFrame(frameIdx);
+            const delay = frameDurations[frameIdx] || 40;
+            frameIdx++;
+            jumpscareInterval = setTimeout(nextFrame, delay);
+        }
+        nextFrame();
+    }
+
+    waitForImage();
+}
+
+// =====================================================
+//  CAMERA SYSTEM
+// =====================================================
+function buildCamBar() {
+    const bar = document.getElementById('cam-bar');
+    bar.innerHTML = '';
+    cameras.forEach((cam, i) => {
+        const btn = document.createElement('div');
+        btn.className = 'cam-btn' + (i === 0 ? ' active' : '');
+        btn.innerHTML = `
+            <img class="cam-thumb" src="${cam.img}" alt="${cam.id}" onerror="this.style.background='#1a1a1a'">
+            <div>
+                <div class="cam-id-tag">${cam.id}</div>
+                <div class="cam-name-tag">${cam.name}</div>
+            </div>
+        `;
+        btn.onclick = () => switchCam(i);
+        bar.appendChild(btn);
+    });
+}
+
+function openCamera() {
+    if (!gameRunning) return;
+    isCameraOpen = true;
+    calculatePowerUsage();
+    const overlay = document.getElementById('camera-overlay');
+    overlay.classList.add('open');
+    switchCam(currentCam);
+}
+
+function closeCamera() {
+    isCameraOpen = false;
+    calculatePowerUsage();
+    document.getElementById('camera-overlay').classList.remove('open');
+}
+
+function switchCam(index) {
+    const staticEl = document.getElementById('cam-static');
+    staticEl.style.opacity = '1';
+    setTimeout(() => staticEl.style.opacity = '0', 150);
+
+    currentCam = index;
+    const cam  = cameras[index];
+    document.getElementById('cam-view').src = cam.img;
+    document.getElementById('cam-label').querySelector('.cam-id').textContent   = cam.id;
+    document.getElementById('cam-label').querySelector('.cam-room').textContent = cam.name;
+
+    document.querySelectorAll('.cam-btn').forEach((b, i) => {
+        b.classList.toggle('active', i === index);
+    });
+}
+</script>
+</body>
+</html>
